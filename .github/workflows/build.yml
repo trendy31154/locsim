@@ -3,11 +3,22 @@ name: build
 on:
   push:
     branches: [main]
+    tags: ["v*"]
   pull_request:
   workflow_dispatch:
+    inputs:
+      bundle_id:
+        description: "Custom Bundle ID (leave default unless needed)"
+        required: false
+        default: "com.rockykln.locsim"
+      create_release:
+        description: "Publish IPA to GitHub Releases"
+        type: boolean
+        required: false
+        default: true
 
 permissions:
-  contents: read
+  contents: write
 
 # A newer push to the same branch or pull request replaces the running build.
 concurrency:
@@ -63,26 +74,55 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Customize Bundle ID
+        if: inputs.bundle_id != '' && inputs.bundle_id != 'com.rockykln.locsim'
+        env:
+          BUNDLE_ID: ${{ inputs.bundle_id }}
+        run: |
+          if ! [[ "$BUNDLE_ID" =~ ^[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+$ ]]; then
+            echo "::error::Invalid Bundle ID: $BUNDLE_ID"
+            exit 1
+          fi
+          prefix="${BUNDLE_ID%.*}"
+          sed -i '' "s/bundleIdPrefix: com\.rockykln/bundleIdPrefix: $prefix/g" project.yml
+          for file in \
+            project.yml \
+            LocSim/Info.plist \
+            LocSim/LocSim.entitlements \
+            LocSimWidgets/LocSimWidgets.entitlements \
+            LocSimWidgets/LocationControls.swift \
+            LiveActivity/WidgetSnapshot.swift
+          do
+            sed -i '' "s/com\.rockykln\.locsim/$BUNDLE_ID/g" "$file"
+          done
+
       # Xcode, IDevice.xcframework and the project, the same for both workflows.
       - uses: ./.github/actions/prepare-ios
 
-      - name: Build
+      - name: Archive
         run: |
           # Explicit, although shell: bash sets it too: without it a failed build would pass through tee.
           set -o pipefail
-          xcodebuild -project LocSim.xcodeproj -scheme LocSim -configuration Release \
-            -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build \
-            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
-            build 2>&1 | tee build.log > /dev/null
+          xcodebuild archive \
+            -project LocSim.xcodeproj \
+            -scheme LocSim \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/LocSim.xcarchive" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            2>&1 | tee build.log > /dev/null
 
       - name: Warnings
         run: |
           grep -E "warning: .*LocSim" build.log | sort -u || true
-          grep -E "^\*\* BUILD" build.log || true
+          grep -E "^\*\* ARCHIVE" build.log || true
 
       - name: Check bundle
         run: |
-          app=build/Build/Products/Release-iphoneos/LocSim.app
+          app="$RUNNER_TEMP/LocSim.xcarchive/Products/Applications/LocSim.app"
           appex="$app/PlugIns/LocSimTunnel.appex"
           test -d "$appex"
           point=$(plutil -extract NSExtension.NSExtensionPointIdentifier raw "$appex/Info.plist")
@@ -93,6 +133,87 @@ jobs:
           for lang in de fr es it nl pt-BR; do
             test -f "$app/$lang.lproj/Localizable.strings" || { echo "missing $lang.lproj/Localizable.strings"; exit 1; }
           done
+
+      - name: Package IPA
+        id: package
+        run: |
+          app="$RUNNER_TEMP/LocSim.xcarchive/Products/Applications/LocSim.app"
+          ipa_dir="$RUNNER_TEMP/ipa"
+          rm -rf "$ipa_dir"
+          mkdir -p "$ipa_dir/Payload"
+          ditto "$app" "$ipa_dir/Payload/LocSim.app"
+
+          # Remove unexpanded $(TeamIdentifierPrefix) macro from unsigned/ad-hoc entitlements
+          app_ent="$RUNNER_TEMP/LocSim.entitlements"
+          cp LocSim/LocSim.entitlements "$app_ent"
+          plutil -remove com.apple.developer.ubiquity-kvstore-identifier "$app_ent" || true
+
+          if [ -d "$ipa_dir/Payload/LocSim.app/Frameworks" ]; then
+            find "$ipa_dir/Payload/LocSim.app/Frameworks" \( -name "*.framework" -o -name "*.dylib" \) -print0 | \
+              xargs -0 -I{} codesign --force --sign - --timestamp=none "{}"
+          fi
+          codesign --force --sign - --timestamp=none --generate-entitlement-der \
+            --entitlements LocSimTunnel/LocSimTunnel.entitlements \
+            "$ipa_dir/Payload/LocSim.app/PlugIns/LocSimTunnel.appex"
+          codesign --force --sign - --timestamp=none --generate-entitlement-der \
+            --entitlements LocSimWidgets/LocSimWidgets.entitlements \
+            "$ipa_dir/Payload/LocSim.app/PlugIns/LocSimWidgets.appex"
+          codesign --force --sign - --timestamp=none --generate-entitlement-der \
+            --entitlements "$app_ent" \
+            "$ipa_dir/Payload/LocSim.app"
+
+          codesign --verify --strict "$ipa_dir/Payload/LocSim.app/PlugIns/LocSimTunnel.appex"
+          codesign --verify --strict "$ipa_dir/Payload/LocSim.app/PlugIns/LocSimWidgets.appex"
+          codesign --verify --deep --strict "$ipa_dir/Payload/LocSim.app"
+
+          version=$(sed -n 's/^ *MARKETING_VERSION: *"\{0,1\}\([^"]*\)"\{0,1\} *$/\1/p' project.yml)
+          build_num=$(sed -n 's/^ *CURRENT_PROJECT_VERSION: *"\{0,1\}\([^"]*\)"\{0,1\} *$/\1/p' project.yml)
+          short_sha=$(git rev-parse --short=7 HEAD)
+          ipa_name="LocSim-v${version}-${build_num}-${short_sha}.ipa"
+
+          (
+            cd "$ipa_dir"
+            zip -qry "$GITHUB_WORKSPACE/$ipa_name" Payload
+          )
+          cp "$GITHUB_WORKSPACE/$ipa_name" "$GITHUB_WORKSPACE/LocSim.ipa"
+          ls -lh "$GITHUB_WORKSPACE/$ipa_name" "$GITHUB_WORKSPACE/LocSim.ipa"
+
+          echo "ipa_name=$ipa_name" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "build_num=$build_num" >> "$GITHUB_OUTPUT"
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          path: ${{ steps.package.outputs.ipa_name }}
+          archive: false
+          retention-days: 90
+
+      - name: Publish GitHub Release
+        if: >-
+          github.event_name != 'pull_request' &&
+          (github.event_name != 'workflow_dispatch' || inputs.create_release)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.package.outputs.version }}
+          BUILD_NUM: ${{ steps.package.outputs.build_num }}
+          IPA_NAME: ${{ steps.package.outputs.ipa_name }}
+        run: |
+          tag="v${VERSION}-${BUILD_NUM}"
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            tag="$GITHUB_REF_NAME"
+          fi
+          notes="Unsigned (ad-hoc signed with entitlements) IPA built by GitHub Actions from commit \`${GITHUB_SHA::7}\`."
+          if gh release view "$tag" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$tag" "LocSim.ipa" "$IPA_NAME" --clobber -R "$GITHUB_REPOSITORY"
+            gh release edit "$tag" --notes "$notes" -R "$GITHUB_REPOSITORY"
+          else
+            gh release create "$tag" "LocSim.ipa" "$IPA_NAME" \
+              --target "$GITHUB_SHA" \
+              --title "LocSim $tag" \
+              --notes "$notes" \
+              -R "$GITHUB_REPOSITORY"
+          fi
 
       - name: Build log
         if: failure()
