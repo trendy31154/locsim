@@ -728,8 +728,8 @@ final class SimulationSession: ObservableObject {
             write("pairing file taken from Documents")
         }
         let pairing = try PairingStore.load()
-        let host = TunnelAddress.peer
-        try await tunnel.start()
+        let host = Defaults.effectiveTunnelHost
+        try await tunnel.start(host: host)
         try ensureCurrent(started)
         let hostname = Self.setting(SettingsKey.hostname, default: Defaults.hostname)
         let portText = Self.setting(SettingsKey.port, default: "")
@@ -964,7 +964,7 @@ final class SimulationSession: ObservableObject {
     /// After an import: checks only once the VPN configuration exists. Before that the check
     /// would bring up the iOS prompt, which the setup steps announce for the first Set.
     func checkNewPairing() async {
-        guard await tunnel.hasConfiguration() else { return setPairingCheck(.notChecked) }
+        guard await tunnel.hasConfiguration(host: Defaults.effectiveTunnelHost) else { return setPairingCheck(.notChecked) }
         await checkPairing()
     }
 

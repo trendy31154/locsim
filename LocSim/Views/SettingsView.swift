@@ -10,6 +10,7 @@ struct SettingsView: View {
     @EnvironmentObject private var recents: RecentList
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
+    @AppStorage(SettingsKey.tunnelHost) private var tunnelHost = ""
     @AppStorage(SettingsKey.hostname) private var hostname = Defaults.hostname
     @AppStorage(SettingsKey.port) private var port = ""
     @AppStorage(SettingsKey.resend) private var resend = Defaults.resend
@@ -268,10 +269,12 @@ struct SettingsView: View {
 
     private var connectionSection: some View {
         Section {
+            field("Tunnel IP", "network", .blue, text: $tunnelHost, placeholder: TunnelAddress.peer)
             field("Port", "number", .blue, text: $port, placeholder: String(localized: "Auto"))
             field("Hostname", "desktopcomputer", .blue, text: $hostname,
                   placeholder: Defaults.hostname, keyboard: .asciiCapable)
                 // A check result was for the old values.
+                .onChange(of: tunnelHost) { _, _ in session.resetPairingCheck() }
                 .onChange(of: hostname) { _, _ in session.resetPairingCheck() }
                 .onChange(of: port) { _, _ in session.resetPairingCheck() }
             Stepper(value: $resend, in: 3...60) {
@@ -288,7 +291,10 @@ struct SettingsView: View {
             Text("Connection")
         } footer: {
             // Same rule as the session: surrounding spaces are ignored, blank means automatic.
-            if !port.trimmingCharacters(in: .whitespaces).isEmpty, PairingPorts.manual(port) == nil {
+            let trimmedHost = tunnelHost.trimmingCharacters(in: .whitespaces)
+            if !trimmedHost.isEmpty, !LoopbackTunnel.isValidIPv4(trimmedHost) {
+                ErrorFooter(String(localized: "Tunnel IP must be a valid IPv4 address such as 10.7.0.1. Leave it empty for the default."))
+            } else if !port.trimmingCharacters(in: .whitespaces).isEmpty, PairingPorts.manual(port) == nil {
                 ErrorFooter(String(localized: "Port must be a number from 1 to 65535. Leave it empty to find it automatically."))
             } else {
                 Text("Connecting needs Wi-Fi, then cellular works too. “Keep Location in Background” keeps the simulated location while LocSim is in the background and sets it again if iOS resets it.")

@@ -62,6 +62,10 @@ struct AppError: Error, Equatable {
         case .pairingRefused:
             return rejectedEntry
         case .localTunnel:
+            if !LoopbackTunnel.hasBuiltInExtension {
+                return ("LS-205", String(localized: "Loopback VPN not connected"),
+                        String(localized: "Connect LocalDevVPN or StosVPN first, then tap Set Location again."))
+            }
             return ("LS-205", String(localized: "Local connection not started"),
                     String(localized: "LocSim could not start its connection to this iPhone. Allow the VPN configuration when iOS asks and try again."))
         case .otherVPN:

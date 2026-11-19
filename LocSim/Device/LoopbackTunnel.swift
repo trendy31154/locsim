@@ -1,11 +1,69 @@
+import Darwin
 import Foundation
 import LocSimCore
 @preconcurrency import NetworkExtension
 
-/// Starts and stops LocSim's own tunnel extension. It only runs while a connection needs it.
+/// Starts and stops LocSim's own tunnel extension, or verifies an external loopback VPN
+/// (such as LocalDevVPN or StosVPN) when built without the embedded tunnel extension.
 @MainActor
 final class LoopbackTunnel {
     private static var providerID: String { (Bundle.main.bundleIdentifier ?? "") + ".tunnel" }
+
+    nonisolated static var hasBuiltInExtension: Bool {
+        guard let plugins = Bundle.main.builtInPlugInsURL else { return false }
+        return FileManager.default.fileExists(atPath: plugins.appendingPathComponent("LocSimTunnel.appex").path)
+    }
+
+    nonisolated static func isValidIPv4(_ host: String) -> Bool {
+        var addr = in_addr()
+        return host.withCString { inet_pton(AF_INET, $0, &addr) == 1 }
+    }
+
+    /// Checks whether iOS routes `host` through an active `utun*` VPN interface (e.g. LocalDevVPN or StosVPN).
+    nonisolated static func isRouteOnUtun(host: String) -> Bool {
+        var first: UnsafeMutablePointer<ifaddrs>?
+        guard getifaddrs(&first) == 0 else { return false }
+        defer { freeifaddrs(first) }
+
+        var utunAddrs: Set<in_addr_t> = []
+        var current = first
+        while let interface = current {
+            defer { current = interface.pointee.ifa_next }
+            guard String(cString: interface.pointee.ifa_name).hasPrefix("utun"),
+                  interface.pointee.ifa_flags & UInt32(IFF_UP) != 0,
+                  let address = interface.pointee.ifa_addr,
+                  address.pointee.sa_family == UInt8(AF_INET) else { continue }
+            utunAddrs.insert(UnsafeRawPointer(address).assumingMemoryBound(to: sockaddr_in.self).pointee.sin_addr.s_addr)
+        }
+        guard !utunAddrs.isEmpty else { return false }
+
+        let fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
+        guard fd >= 0 else { return false }
+        defer { close(fd) }
+
+        var peer = sockaddr_in()
+        peer.sin_len = UInt8(MemoryLayout<sockaddr_in>.size)
+        peer.sin_family = sa_family_t(AF_INET)
+        peer.sin_port = UInt16(49152).bigEndian
+        guard host.withCString({ inet_pton(AF_INET, $0, &peer.sin_addr) }) == 1 else { return false }
+
+        let connected = withUnsafePointer(to: &peer) {
+            $0.withMemoryRebound(to: sockaddr.self, capacity: 1) {
+                Darwin.connect(fd, $0, socklen_t(MemoryLayout<sockaddr_in>.size))
+            }
+        }
+        guard connected == 0 else { return false }
+
+        var local = sockaddr_in()
+        var len = socklen_t(MemoryLayout<sockaddr_in>.size)
+        let named = withUnsafeMutablePointer(to: &local) {
+            $0.withMemoryRebound(to: sockaddr.self, capacity: 1) {
+                getsockname(fd, $0, &len)
+            }
+        }
+        guard named == 0 else { return false }
+        return utunAddrs.contains(local.sin_addr.s_addr)
+    }
     // A Stop that loads the configuration must not end a tunnel started in the meantime.
     private var wanted = false
     private var heartbeat: Task<Void, Never>?
@@ -21,13 +79,35 @@ final class LoopbackTunnel {
     /// Counts starts, so a stop requested before one of them can step aside.
     private(set) var startCount = 0
 
-    func start() async throws {
+    func start(host: String = TunnelAddress.peer) async throws {
+        guard Self.isValidIPv4(host) else {
+            throw DeviceError(.localTunnel, "Invalid tunnel IP address: \(host)")
+        }
         wanted = true
         startCount += 1
         let token = startCount
         let previous = session
         // A late status change from the previous run must not count as a drop of this one.
         stopWatching()
+
+        if host != TunnelAddress.peer {
+            return
+        }
+
+        if !Self.hasBuiltInExtension {
+            guard Self.isRouteOnUtun(host: host) else {
+                throw DeviceError(.localTunnel, "External loopback VPN (\(host)) is not connected. Connect LocalDevVPN or StosVPN first.")
+            }
+            return
+        }
+
+        if Self.isRouteOnUtun(host: host) {
+            let ownStatus = await existingManager()?.connection.status
+            if ownStatus != .connected {
+                return
+            }
+        }
+
         let connection: NEVPNConnection
         do {
             // Agreement to replace another VPN is for this attempt only.
@@ -35,6 +115,7 @@ final class LoopbackTunnel {
             do {
                 connection = try await enabledManager().connection
             } catch {
+                if Self.isRouteOnUtun(host: host) { return }
                 // The previous tunnel may still be up; without its heartbeat the extension ends itself.
                 if let previous, previous.status == .connected, wanted, startCount == token, session == nil {
                     watch(previous)
@@ -50,8 +131,10 @@ final class LoopbackTunnel {
             default: try connection.startVPNTunnel()
             }
         } catch let error as DeviceError {
+            if Self.isRouteOnUtun(host: host) { return }
             throw error
         } catch {
+            if Self.isRouteOnUtun(host: host) { return }
             throw DeviceError(.localTunnel, "Local tunnel: \(error.localizedDescription)")
         }
         var seenConnecting = false
@@ -62,6 +145,7 @@ final class LoopbackTunnel {
                 || (seenConnecting && [.disconnected, .invalid].contains(connection.status))
         }
         guard up, connection.status == .connected else {
+            if Self.isRouteOnUtun(host: host) { return }
             var reason = up ? "stopped while starting" : "timed out"
             do {
                 try await connection.fetchLastDisconnectError()
@@ -82,6 +166,7 @@ final class LoopbackTunnel {
     func stop() async {
         wanted = false
         stopWatching()
+        guard Self.hasBuiltInExtension else { return }
         guard let manager = await existingManager(), !wanted else { return }
         switch manager.connection.status {
         case .connected, .connecting, .reasserting: manager.connection.stopVPNTunnel()
@@ -149,9 +234,12 @@ final class LoopbackTunnel {
         observer = nil
     }
 
-    /// Whether iOS already has LocSim's VPN configuration, so starting asks nothing.
-    func hasConfiguration() async -> Bool {
-        await existingManager() != nil
+    /// Whether iOS already has LocSim's VPN configuration (or an active external loopback tunnel), so starting asks nothing.
+    func hasConfiguration(host: String = TunnelAddress.peer) async -> Bool {
+        if host != TunnelAddress.peer { return Self.isValidIPv4(host) }
+        if Self.isRouteOnUtun(host: host) { return true }
+        guard Self.hasBuiltInExtension else { return false }
+        return await existingManager() != nil
     }
 
     private func existingManager() async -> NETunnelProviderManager? {

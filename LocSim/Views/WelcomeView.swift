@@ -54,8 +54,17 @@ struct WelcomeView: View {
                             Label("Check Pairing File", systemImage: "checkmark.shield")
                         }
                     }
-                    step(5, "Allow the local connection",
-                         "When you first set a location, iOS asks to add a VPN configuration. LocSim only uses it to reach this iPhone; no traffic leaves the device through it.")
+                    if LoopbackTunnel.hasBuiltInExtension {
+                        step(5, "Allow the local connection",
+                             "When you first set a location, iOS asks to add a VPN configuration. LocSim only uses it to reach this iPhone; no traffic leaves the device through it.")
+                    } else {
+                        step(5, "Connect LocalDevVPN",
+                             "Install and connect LocalDevVPN (or StosVPN) before setting a location so LocSim can reach this iPhone locally.") {
+                            Link(destination: URL(string: "https://apps.apple.com/app/localdevvpn/id6755608044")!) {
+                                Label("Get LocalDevVPN", systemImage: "arrow.up.right")
+                            }
+                        }
+                    }
                 } footer: {
                     if let message {
                         ErrorFooter(message)

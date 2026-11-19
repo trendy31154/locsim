@@ -3,6 +3,7 @@ import Foundation
 import LocSimCore
 
 enum SettingsKey {
+    static let tunnelHost = "tunnelHost"
     static let hostname = "pairingHostname"
     static let port = "portOverride"
     static let resend = "resendSeconds"
@@ -40,8 +41,15 @@ enum Defaults {
     static let resend = 60
     static let coordinate = CLLocationCoordinate2D(latitude: 48.85660, longitude: 2.35220)
 
+    static var effectiveTunnelHost: String {
+        let raw = (UserDefaults.standard.string(forKey: SettingsKey.tunnelHost) ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return raw.isEmpty ? TunnelAddress.peer : raw
+    }
+
     static func register() {
         UserDefaults.standard.register(defaults: [
+            SettingsKey.tunnelHost: "",
             SettingsKey.hostname: hostname,
             SettingsKey.port: "",
             SettingsKey.resend: resend,
