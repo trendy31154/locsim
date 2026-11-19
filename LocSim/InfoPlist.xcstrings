@@ -1,126 +1,138 @@
 {
-  "sourceLanguage" : "en",
-  "strings" : {
-    "CFBundleDisplayName" : {
-      "comment" : "Bundle display name",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "LocSim"
+  "sourceLanguage": "en",
+  "strings": {
+    "CFBundleDisplayName": {
+      "comment": "Bundle display name",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "LocSim"
           }
         }
       },
-      "shouldTranslate" : false
+      "shouldTranslate": false
     },
-    "CFBundleName" : {
-      "comment" : "Bundle name",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "LocSim"
+    "CFBundleName": {
+      "comment": "Bundle name",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "LocSim"
           }
         }
       },
-      "shouldTranslate" : false
+      "shouldTranslate": false
     },
-    "NSLocalNetworkUsageDescription" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sucht den Remote-Pairing-Dienst dieses Geräts."
+    "NSLocalNetworkUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sucht den Remote-Pairing-Dienst dieses Geräts."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Finds the Remote Pairing service of this device."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finds the Remote Pairing service of this device."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Busca el servicio Remote Pairing de este dispositivo."
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Busca el servicio Remote Pairing de este dispositivo."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Trouve le service Remote Pairing de cet appareil."
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trouve le service Remote Pairing de cet appareil."
           }
         },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Trova il servizio Remote Pairing di questo dispositivo."
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trova il servizio Remote Pairing di questo dispositivo."
           }
         },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zoekt de Remote Pairing-dienst van dit apparaat."
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zoekt de Remote Pairing-dienst van dit apparaat."
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Encontra o serviço Remote Pairing deste dispositivo."
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encontra o serviço Remote Pairing deste dispositivo."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用于发现此设备的远程配对（Remote Pairing）服务。"
           }
         }
       }
     },
-    "NSLocationWhenInUseUsageDescription" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zeigt deinen Standort auf der Karte. Während ein Standort simuliert wird, prüft LocSim im Hintergrund, ob iOS ihn auf deinen echten Standort zurückgesetzt hat, und setzt den simulierten erneut."
+    "NSLocationWhenInUseUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeigt deinen Standort auf der Karte. Während ein Standort simuliert wird, prüft LocSim im Hintergrund, ob iOS ihn auf deinen echten Standort zurückgesetzt hat, und setzt den simulierten erneut."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Shows your position on the map. While a location is simulated, LocSim checks in the background whether iOS has reset it to your real location, and sets the simulated one again."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows your position on the map. While a location is simulated, LocSim checks in the background whether iOS has reset it to your real location, and sets the simulated one again."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Muestra tu ubicación en el mapa. Mientras se simula una ubicación, LocSim comprueba en segundo plano si iOS la ha restablecido a tu ubicación real y vuelve a establecer la simulada."
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Muestra tu ubicación en el mapa. Mientras se simula una ubicación, LocSim comprueba en segundo plano si iOS la ha restablecido a tu ubicación real y vuelve a establecer la simulada."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Affiche votre position sur la carte. Pendant la simulation d’une position, LocSim vérifie en arrière-plan si iOS l’a remise à votre position réelle et rétablit la position simulée."
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Affiche votre position sur la carte. Pendant la simulation d’une position, LocSim vérifie en arrière-plan si iOS l’a remise à votre position réelle et rétablit la position simulée."
           }
         },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mostra la tua posizione sulla mappa. Mentre simula una posizione, LocSim controlla in background se iOS l’ha riportata alla tua posizione reale e reimposta quella simulata."
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostra la tua posizione sulla mappa. Mentre simula una posizione, LocSim controlla in background se iOS l’ha riportata alla tua posizione reale e reimposta quella simulata."
           }
         },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toont je positie op de kaart. Terwijl een locatie wordt gesimuleerd, controleert LocSim op de achtergrond of iOS die heeft teruggezet naar je echte locatie, en stelt de gesimuleerde opnieuw in."
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toont je positie op de kaart. Terwijl een locatie wordt gesimuleerd, controleert LocSim op de achtergrond of iOS die heeft teruggezet naar je echte locatie, en stelt de gesimuleerde opnieuw in."
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mostra a sua posição no mapa. Enquanto uma localização é simulada, o LocSim verifica em segundo plano se o iOS a redefiniu para a sua localização real e define a simulada novamente."
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostra a sua posição no mapa. Enquanto uma localização é simulada, o LocSim verifica em segundo plano se o iOS a redefiniu para a sua localização real e define a simulada novamente."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用于在地图上显示你的位置。模拟定位期间，LocSim 会在后台检测 iOS 是否将其重置为真实位置，并在需要时重新发送模拟位置。"
           }
         }
       }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

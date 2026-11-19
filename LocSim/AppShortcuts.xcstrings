@@ -1,149 +1,168 @@
 {
-  "sourceLanguage" : "en",
-  "strings" : {
-    "Clear the location in ${applicationName}" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "de" : {
-          "stringSet" : {
-            "state" : "translated",
-            "values" : [
+  "sourceLanguage": "en",
+  "strings": {
+    "Clear the location in ${applicationName}": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "de": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
               "Standort in ${applicationName} zurücksetzen",
               "${applicationName} stoppen"
             ]
           }
         },
-        "en" : {
-          "stringSet" : {
-            "state" : "new",
-            "values" : [
+        "en": {
+          "stringSet": {
+            "state": "new",
+            "values": [
               "Clear the location in ${applicationName}",
               "Stop ${applicationName}"
             ]
           }
         },
-        "es" : {
-          "stringSet" : {
-            "state" : "translated",
-            "values" : [
+        "es": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
               "Restablecer la ubicación en ${applicationName}",
               "Detener ${applicationName}"
             ]
           }
         },
-        "fr" : {
-          "stringSet" : {
-            "state" : "translated",
-            "values" : [
+        "fr": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
               "Réinitialiser la position dans ${applicationName}",
               "Arrêter ${applicationName}"
             ]
           }
         },
-        "it" : {
-          "stringSet" : {
-            "state" : "translated",
-            "values" : [
+        "it": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
               "Ripristina la posizione in ${applicationName}",
               "Ferma ${applicationName}"
             ]
           }
         },
-        "nl" : {
-          "stringSet" : {
-            "state" : "translated",
-            "values" : [
+        "nl": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
               "Herstel de locatie in ${applicationName}",
               "Stop ${applicationName}"
             ]
           }
         },
-        "pt-BR" : {
-          "stringSet" : {
-            "state" : "translated",
-            "values" : [
+        "pt-BR": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
               "Redefinir a localização no ${applicationName}",
               "Parar o ${applicationName}"
+            ]
+          }
+        },
+        "zh-Hans": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "在${applicationName}中清除位置",
+              "停止${applicationName}"
             ]
           }
         }
       }
     },
-    "Set ${applicationName} to ${favorite}" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "de" : {
-          "stringSet" : {
-            "state" : "translated",
-            "values" : [
+    "Set ${applicationName} to ${favorite}": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "de": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
               "${applicationName} auf ${favorite} setzen",
               "${favorite} mit ${applicationName} simulieren",
               "Favorit in ${applicationName} setzen"
             ]
           }
         },
-        "en" : {
-          "stringSet" : {
-            "state" : "new",
-            "values" : [
+        "en": {
+          "stringSet": {
+            "state": "new",
+            "values": [
               "Set ${applicationName} to ${favorite}",
               "Simulate ${favorite} with ${applicationName}",
               "Set a favorite in ${applicationName}"
             ]
           }
         },
-        "es" : {
-          "stringSet" : {
-            "state" : "translated",
-            "values" : [
+        "es": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
               "Establecer ${applicationName} en ${favorite}",
               "Simular ${favorite} con ${applicationName}",
               "Establecer un favorito en ${applicationName}"
             ]
           }
         },
-        "fr" : {
-          "stringSet" : {
-            "state" : "translated",
-            "values" : [
+        "fr": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
               "Régler ${applicationName} sur ${favorite}",
               "Simuler ${favorite} avec ${applicationName}",
               "Définir un favori dans ${applicationName}"
             ]
           }
         },
-        "it" : {
-          "stringSet" : {
-            "state" : "translated",
-            "values" : [
+        "it": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
               "Imposta ${applicationName} su ${favorite}",
               "Simula ${favorite} con ${applicationName}",
               "Imposta un preferito in ${applicationName}"
             ]
           }
         },
-        "nl" : {
-          "stringSet" : {
-            "state" : "translated",
-            "values" : [
+        "nl": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
               "Stel ${applicationName} in op ${favorite}",
               "Simuleer ${favorite} met ${applicationName}",
               "Stel een favoriet in met ${applicationName}"
             ]
           }
         },
-        "pt-BR" : {
-          "stringSet" : {
-            "state" : "translated",
-            "values" : [
+        "pt-BR": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
               "Definir ${applicationName} como ${favorite}",
               "Simular ${favorite} com o ${applicationName}",
               "Definir um favorito no ${applicationName}"
+            ]
+          }
+        },
+        "zh-Hans": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "用${applicationName}定位到${favorite}",
+              "用${applicationName}模拟${favorite}",
+              "在${applicationName}中设置收藏位置"
             ]
           }
         }
       }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

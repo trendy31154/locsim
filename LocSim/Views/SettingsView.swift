@@ -19,6 +19,7 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.mapStyle) private var mapStyle = MapStyleOption.standard.rawValue
     @AppStorage(SettingsKey.precision) private var precision = 5
     @AppStorage(SettingsKey.coordinateFormat) private var coordinateFormat = CoordinateFormat.decimal.rawValue
+    @AppStorage(SettingsKey.gcj02Correction) private var gcj02Correction = true
     @AppStorage(SettingsKey.zoom) private var zoom = ZoomOption.district.rawValue
     @AppStorage(SettingsKey.autoApply) private var autoApply = false
     @AppStorage(SettingsKey.haptics) private var haptics = true
@@ -222,6 +223,10 @@ struct SettingsView: View {
                 }
                 .onChange(of: precision) { _, _ in session.coordinateFormatChanged() }
             }
+            Toggle(isOn: $gcj02Correction) {
+                item("China Offset Correction", "scope", .orange)
+            }
+            .onChange(of: gcj02Correction) { _, _ in session.coordinateCorrectionChanged() }
             Toggle(isOn: $autoApply) {
                 item("Set on Selection", "location.fill", .red)
             }
@@ -239,7 +244,7 @@ struct SettingsView: View {
         } header: {
             Text("Map")
         } footer: {
-            Text("Set on Selection sends a choice right away. Recent Locations keeps the last five.")
+            Text("China Offset Correction converts mainland China GCJ-02 map coordinates to WGS-84 before sending. Turn it off if you paste raw WGS-84 coordinates. Set on Selection sends a choice right away. Recent Locations keeps the last five.")
         }
     }
 

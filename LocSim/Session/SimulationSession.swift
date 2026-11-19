@@ -670,19 +670,32 @@ final class SimulationSession: ObservableObject {
         await tunnel.stop()
     }
 
+    /// Converts mainland China GCJ-02 map coordinates to WGS-84 when enabled in Settings.
+    private func deviceCoordinate(for c: CLLocationCoordinate2D) -> CLLocationCoordinate2D {
+        guard UserDefaults.standard.bool(forKey: SettingsKey.gcj02Correction) else { return c }
+        let converted = ChinaCoordinate.gcj02ToWgs84(latitude: c.latitude, longitude: c.longitude)
+        return CLLocationCoordinate2D(latitude: converted.latitude, longitude: converted.longitude)
+    }
+
+    func coordinateCorrectionChanged() {
+        guard active != nil, !isSimulated else { return }
+        Task { await resend() }
+    }
+
     private func send(_ c: CLLocationCoordinate2D, reconnect: Bool, started: Int) async throws {
+        let device = deviceCoordinate(for: c)
         renewLinkIfStuck()
         if !link.isOpen {
             try await reopen(started)
         }
         do {
-            try await link.set(latitude: c.latitude, longitude: c.longitude)
+            try await link.set(latitude: device.latitude, longitude: device.longitude)
         } catch let error where reconnect && !(error is CancellationError) {
             try ensureCurrent(started)
             write("send failed: \(error.localizedDescription)")
             renewLinkIfStuck()
             try await reopen(started)
-            try await link.set(latitude: c.latitude, longitude: c.longitude)
+            try await link.set(latitude: device.latitude, longitude: device.longitude)
         }
         sentAt = Date()
     }
@@ -875,7 +888,7 @@ final class SimulationSession: ObservableObject {
     private func checkFix(_ fix: CLLocationCoordinate2D, accuracy: CLLocationAccuracy) {
         // A Set or resend in progress sends anyway.
         guard let active, !isSimulated, state == .active, !busy, !clearing else { return }
-        let distance = fix.distance(to: active)
+        let distance = fix.distance(to: deviceCoordinate(for: active))
         // A coarse fix that may still be at the simulated place is no reset.
         guard distance - max(0, accuracy) > KeepAlive.jump else { return }
         // A reset that keeps coming back must not turn into a send loop.

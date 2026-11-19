@@ -12,6 +12,7 @@ enum SettingsKey {
     static let mapStyle = "mapStyle"
     static let precision = "coordinatePrecision"
     static let coordinateFormat = "coordinateFormat"
+    static let gcj02Correction = "gcj02Correction"
     static let zoom = "zoomDistance"
     static let autoApply = "autoApply"
     static let haptics = "haptics"
@@ -58,6 +59,7 @@ enum Defaults {
             SettingsKey.mapStyle: MapStyleOption.standard.rawValue,
             SettingsKey.precision: 5,
             SettingsKey.coordinateFormat: CoordinateFormat.decimal.rawValue,
+            SettingsKey.gcj02Correction: true,
             SettingsKey.zoom: ZoomOption.district.rawValue,
             SettingsKey.autoApply: false,
             SettingsKey.haptics: true,
